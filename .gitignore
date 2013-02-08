@@ -1,0 +1,14 @@
+
+*.csv
+
+*.pyc
+
+*.txt
+
+*.terms
+
+*.mtx
+
+*.classes
+
+*.centers
