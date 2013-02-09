@@ -10,7 +10,7 @@ def main():
     synthetic_data_file = open('2DGaussianMixture.csv', mode='r')
     next(synthetic_data_file)  # Skip first line
 
-    K = 3
+    K = 20
     KClusters = [Cluster() for k in range(K)]
 
     for line in synthetic_data_file:
@@ -23,12 +23,14 @@ def main():
     assign_random_center(KClusters)
     print k_means_objective(KClusters)
 
-    for i in range(20):
+    for i in range(25):
         print "Iteration: " + str(i)
         reclassify_points(KClusters)
         print k_means_objective(KClusters)
         find_average_centers(KClusters)
         print k_means_objective(KClusters)
+
+    print_points_to_file('lloyds_' + str(K) + '_clusters.csv', KClusters)
 
 
 if __name__ == '__main__':

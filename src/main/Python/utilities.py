@@ -18,13 +18,11 @@ def k_means_objective(clusters):
     return sum_of_squares
 
 
-def assign_random_center(cluster_list):
-    total_points = []
-    K = len(cluster_list)
-    [total_points.extend(c.points) for c in cluster_list]
-    num_points = len(total_points)
-
-    draw_wo_replacement = random.sample(range(num_points), K)
-
-    for i, c in enumerate(cluster_list):
-        c.mu = total_points[draw_wo_replacement[i]]
+def print_points_to_file(filename, cluster_list):
+    with open(filename, 'w') as f:
+        f.write('cluster,x1,x2,mu1,mu2\n')
+        for i, c in enumerate(cluster_list):
+            for x in c.points:
+                f.write(str(i) + ',' + str(x[0]) + ',' + \
+                     str(x[1]) + ',' + str(c.mu[0]) + \
+                     ',' + str(c.mu[1]) + '\n')
