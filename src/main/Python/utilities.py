@@ -1,6 +1,5 @@
-from cluster import *
+from cluster import SyntheticDataInstance
 import numpy as np
-import random
 
 
 def parse_line(line):
