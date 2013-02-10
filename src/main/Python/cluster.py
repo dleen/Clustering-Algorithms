@@ -3,8 +3,13 @@ import numpy as np
 
 class Cluster:
     """ Defines a cluster """
-    def __init__(self, mu=np.array([0.0, 0.0]), points=None):
+    def __init__(self, mu=np.array([0.0, 0.0]),
+        cov=np.array([[1.0, 0.0], [0.0, 1.0]]),
+        weight=0.0,
+        points=None):
         self.mu = mu
+        self.cov = cov
+        self.weight = weight
         self.points = points or []
 
     def __repr__(self):

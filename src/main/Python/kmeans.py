@@ -82,8 +82,8 @@ def k_means(K, initialization):
 
 
 def main():
-    k_means(20, 'lloyds')
-    k_means(20, 'km++')
+    k_means(3, 'lloyds')
+    k_means(3, 'km++')
 
 
 if __name__ == '__main__':
