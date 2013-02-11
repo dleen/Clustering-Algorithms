@@ -31,14 +31,33 @@ def _log_multivariate_normal_density_full(X, means, covars):
     return log_prob
 
 
-def prob_x_cond_theta(x, cluster):
-    print x
-    print x.shape
-    print cluster.cov
+def log_prob_x_cond_theta(x, cluster):
+    # print x
+    # print x.shape
+    # print cluster.cov
     logp = _log_multivariate_normal_density_full(x, cluster.mu,
         cluster.cov)
 
-    return np.exp(logp)
+    return logp + np.log(cluster.weight)
+
+
+def responsibility(x, lpr, cluster_list):
+    arr = []
+    for c in cluster_list:
+        arr.append(log_prob_x_cond_theta(x, c))
+
+    logprob = logsumexp(arr)
+
+    return np.exp(lpr - logprob)
+
+
+def logsumexp(arr):
+    # Use the max to normalize, as with the log this is what accumulates
+    # the less errors
+    vmax = max(arr)
+    out = np.log(np.sum(np.exp(arr - vmax)))
+    out += vmax
+    return out
 
 
 def calculate_normalization_factor(x, cluster_list):
@@ -58,13 +77,13 @@ def em_step(cluster_list):
     for c in cluster_list:
         # print c.cov
         for x in c.points:
-            rtemp = prob_x_cond_theta(x, c) / \
-                calculate_normalization_factor(x, cluster_list)
+            lpr = log_prob_x_cond_theta(x, c)
+            rtemp = responsibility(x, lpr, cluster_list)
             # print "rtemp",
             # print rtemp
             r.append(rtemp)
-            if np.isnan(r).any():
-                break
+            # if np.isnan(r).any():
+            #     break
         # print len(r)
         # print sum(r)
         c.weight = calc_new_weight(r)
@@ -100,24 +119,29 @@ def initialize_weights(cluster_list):
 
 
 def main(K, initialization):
-    KClusters = [Cluster() for k in range(K)]
+    # KClusters = [Cluster() for k in range(K)]
 
-    fill_up_clusters(KClusters)
-    kmpp(KClusters)
-    initialize_weights(KClusters)
+    b = np.loadtxt('2DGaussianMixture.csv', dtype='float', delimiter=',',
+        skiprows=1)
 
-    kmo_old = 0
-    for i in range(50):
-        em_step(KClusters)
-        kmo = k_means_objective(KClusters)
-        if abs(kmo - kmo_old) < 0.000001:
-            break
-        kmo_old = kmo
+    print b.shape
 
-    print "Iteration: " + str(i)
-    print kmo
-    print_points_to_file(initialization + '_' + str(K) + \
-        '_clusters.csv', KClusters)
+    # fill_up_clusters(KClusters)
+    # kmpp(KClusters)
+    # initialize_weights(KClusters)
+
+    # kmo_old = 0
+    # for i in range(50):
+    #     em_step(KClusters)
+    #     kmo = k_means_objective(KClusters)
+    #     if abs(kmo - kmo_old) < 0.000001:
+    #         break
+    #     kmo_old = kmo
+
+    # print "Iteration: " + str(i)
+    # print kmo
+    # print_points_to_file(initialization + '_' + str(K) + \
+    #     '_clusters.csv', KClusters)
 
 
 if __name__ == '__main__':
