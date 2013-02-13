@@ -55,11 +55,17 @@ def pie_radius_points(theta1, theta2):
 
 
 def plot_figure(X, G, r):
-    size = 15
-
+    size = 40
     fig = plt.figure()
-
     ax = fig.add_subplot(111)
+    ax.set_title('The conditional probabilities of points belonging to ' +\
+        'one of three clusters\n' + 'After 30 iterations:')
+    ax.set_xlabel('X dimension')
+    ax.set_ylabel('Y dimension')
+
+    for i in range(3):
+        plot_cov_ellipse(G.covars[i], G.means[i], nstd=2, ax=ax, alpha=0.2)
+
     for i, p in enumerate(X):
         ang = np.cumsum(r[i, :])
         ax.scatter(p[0], p[1], marker=(pie_radius_points(0, ang[0]), 0),
@@ -69,7 +75,5 @@ def plot_figure(X, G, r):
         ax.scatter(p[0], p[1], marker=(pie_radius_points(ang[1], ang[2]), 0),
             s=size, facecolor='red')
 
-    for i in range(3):
-        plot_cov_ellipse(G.covars[i], G.means[i], nstd=2, ax=ax, alpha=0.2)
 
     plt.show()
