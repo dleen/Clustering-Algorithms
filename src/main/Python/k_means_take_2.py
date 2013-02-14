@@ -43,7 +43,6 @@ class KMeans():
             centers = self._init_kmpp(X, centers)
         elif self.init == 'user':
             centers = self.user_centers
-
         return centers
 
     def _init_kmpp(self, X, centers):
@@ -93,15 +92,16 @@ class KMeans():
             min_dist = -1
             for center_ind, center in enumerate(centers):
                 dist = 0.0
-                dist += -2 * np.dot(sample, center)
-                print dist.shape
+                if sample.ndim > 1:
+                    dist += -2 * np.sum(np.multiply(sample, center), axis=1)
+                else:
+                    dist += -2 * np.dot(sample, center)
                 dist += centers_squared_norms[center_ind]
                 dist += X_squared_norms[sample_ind]
 
                 if min_dist == -1 or dist < min_dist:
                     min_dist = dist
                     labels[sample_ind] = center_ind
-
         return labels
 
     def _maximization_step(self, X, labels):

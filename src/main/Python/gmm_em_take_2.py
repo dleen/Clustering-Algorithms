@@ -13,6 +13,7 @@ class GMM_EM():
         self.init = init
         self.weights = np.ones(self.n_clusters) / self.n_clusters
         self.user_centers = user_centers
+        self.min_covar = 1.e-3
 
     def _init_means_covars(self, X):
         if self.init == 'user':
@@ -21,10 +22,12 @@ class GMM_EM():
             self.means = KMeans(self.n_clusters,
                 self.init)._initialization_step(X)
         n_features = X.shape[1]
-        self.covars = np.tile(np.eye(n_features), (self.n_clusters, 1, 1))
+        # self.covars = np.tile(0.01 * np.eye(n_features), (self.n_clusters, 1, 1))
+        self.covars = np.tile(np.cov(X.T) + self.min_covar * np.eye(X.shape[1]),
+            (self.n_clusters, 1, 1))
 
     def _log_multivariate_normal_density(self, X, means, covars,
-        min_covar=1.e-7):
+        min_covar=1.e-3):
         from scipy import linalg
         solve_triangular = linalg.solve_triangular
 
@@ -95,7 +98,7 @@ class GMM_EM():
         return logprob, responsibilities
 
     def _maximization_step(self, X, responsibilities,
-            min_covar=1.e-7):
+            min_covar=1.e-3):
         lam = 0.2
         weights = responsibilities.sum(axis=0)
         weighted_X_sum = np.dot(responsibilities.T, X)
@@ -106,7 +109,7 @@ class GMM_EM():
         self.means = np.multiply(weighted_X_sum, inverse_weights)
 
         self.covars = self._covar_mstep(
-            X, responsibilities, weighted_X_sum, inverse_weights, lam)
+            X, responsibilities, weighted_X_sum, inverse_weights, lam=lam)
         return weights
         # weights = responsibilities.sum(axis=0)
         # weighted_X_sum = np.dot(responsibilities.T, X)
@@ -121,7 +124,7 @@ class GMM_EM():
         # return weights
 
     def _covar_mstep(self, X, responsibilities, weighted_X_sum, norm,
-                          min_covar=1.e-7, lam=0):
+                          min_covar=1.e-3, lam=0):
         n_features = X.shape[1]
         cv = np.empty((self.n_clusters, n_features, n_features))
         for c in range(self.n_clusters):
@@ -147,7 +150,7 @@ class GMM_EM():
             llsum = curr_log_likelihood.sum()
             if i > 0 and abs(llsum - llsum_old) < 0.0001:
                 break
-            self._maximization_step(X, responsibilities)
+            self._maximization_step(X, responsibilities, min_covar=1.e-3)
 
         labels = responsibilities.argmax(axis=1)
         print objective(X, labels, self.means)

@@ -76,13 +76,18 @@ def main():
     tf_idf(X)
     # top_5(C, X)
 
+    XX = X.todense().T
+
     # from sklearn import mixture
+    # from sklearn import cluster
+    # g = cluster.KMeans(n_clusters=5, init=centers, max_iter=100)
+    # g.fit(XX)
+    # print objective(XX, g.labels_, g.cluster_centers_)
     # g = mixture.GMM(n_components=5)
     # g.fit(X.T.todense())
 
-    # K = GMM_EM(n_clusters=5, n_iters=100, init='user', user_centers=centers)
-    K = KMeans(n_clusters=3, init='lloyds')
-    XX = X.todense().T
+    K = GMM_EM(n_clusters=5, n_iters=100, init='user', user_centers=centers)
+    # K = KMeans(n_clusters=5, init='user', user_centers=centers)
     K.fit(XX)
 
     print objective(XX, K.labels, K.centers)
