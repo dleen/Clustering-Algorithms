@@ -75,5 +75,4 @@ def plot_figure(X, G, r):
         ax.scatter(p[0], p[1], marker=(pie_radius_points(ang[1], ang[2]), 0),
             s=size, facecolor='red')
 
-
     plt.show()

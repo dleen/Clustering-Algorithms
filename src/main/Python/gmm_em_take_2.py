@@ -6,14 +6,20 @@ EPS = np.finfo(float).eps
 
 
 class GMM_EM():
-    def __init__(self, n_clusters=1, n_iters=100, init='km++'):
+    def __init__(self, n_clusters=1, n_iters=100, init='km++',
+            user_centers=None):
         self.n_clusters = n_clusters
         self.n_iters = n_iters
         self.init = init
         self.weights = np.ones(self.n_clusters) / self.n_clusters
+        self.user_centers = user_centers
 
     def _init_means_covars(self, X):
-        self.means = KMeans(self.n_clusters, self.init)._initialization_step(X)
+        if self.init == 'user':
+            self.means = self.user_centers
+        else:
+            self.means = KMeans(self.n_clusters,
+                self.init)._initialization_step(X)
         n_features = X.shape[1]
         self.covars = np.tile(np.eye(n_features), (self.n_clusters, 1, 1))
 
@@ -88,29 +94,44 @@ class GMM_EM():
         responsibilities = np.exp(lpr - logprob[:, np.newaxis])
         return logprob, responsibilities
 
-    def _maximization_step(self, X, responsibilities, min_covar=1.e-7):
+    def _maximization_step(self, X, responsibilities,
+            min_covar=1.e-7):
+        lam = 0.2
         weights = responsibilities.sum(axis=0)
         weighted_X_sum = np.dot(responsibilities.T, X)
         inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
 
         self.weights = (weights / (weights.sum() + 10 * EPS) + EPS)
 
-        self.means = weighted_X_sum * inverse_weights
+        self.means = np.multiply(weighted_X_sum, inverse_weights)
 
         self.covars = self._covar_mstep(
-            X, responsibilities, weighted_X_sum, inverse_weights)
-
+            X, responsibilities, weighted_X_sum, inverse_weights, lam)
         return weights
+        # weights = responsibilities.sum(axis=0)
+        # weighted_X_sum = np.dot(responsibilities.T, X)
+        # inverse_weights = 1.0 / (weights[:, np.newaxis] + 10 * EPS)
+
+        # self.weights_ = (weights / (weights.sum() + 10 * EPS) + EPS)
+        # self.means_ = weighted_X_sum * inverse_weights
+        # covar_mstep_func = _covar_mstep_funcs[self.covariance_type]
+        # self.covars_ = covar_mstep_func(
+        #     self, X, responsibilities, weighted_X_sum, inverse_weights,
+        #     min_covar)
+        # return weights
 
     def _covar_mstep(self, X, responsibilities, weighted_X_sum, norm,
-                          min_covar=1.e-7):
+                          min_covar=1.e-7, lam=0):
         n_features = X.shape[1]
         cv = np.empty((self.n_clusters, n_features, n_features))
         for c in range(self.n_clusters):
             post = responsibilities[:, c]
-            avg_cv = np.dot(post * X.T, X) / (post.sum() + 10 * EPS)
+            # avg_cv = np.dot(post * X.T, X) / (post.sum() + 10 * EPS)
+            avg_cv = np.dot(np.multiply(post, X.T), X) / (post.sum() + 10 * EPS)
             mu = self.means[c][np.newaxis]
             cv[c] = (avg_cv - np.dot(mu.T, mu) + min_covar * np.eye(n_features))
+            cv[c] *= (1 - lam)
+            cv[c] += lam * np.eye(n_features)
         return cv
 
     def fit(self, X):
@@ -120,6 +141,7 @@ class GMM_EM():
         llsum_old = 0.0
 
         for i in range(self.n_iters):
+            print i
             llsum_old = llsum
             curr_log_likelihood, responsibilities = self.eval(X)
             llsum = curr_log_likelihood.sum()
@@ -146,7 +168,8 @@ class GMM_EM():
 
 def main():
     X = get_data()
-    G = GMM_EM(3, init='lloyds')
+    print X.shape
+    G = GMM_EM(n_clusters=3, init='km++')
     l, r = G.fit(X)
 
     # from plotting import plot_figure
