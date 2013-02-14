@@ -4,29 +4,24 @@ version := "1.0"
 
 scalacOptions ++= Seq("-deprecation", "-unchecked")
 
-resolvers += "Concurrent Maven Repo" at "http://conjars.org/repo"
+libraryDependencies += "com.nicta" %% "scoobi" % "0.6.1-cdh4"
 
-libraryDependencies += "cascading" % "cascading-core" % "2.0.2"
+scalacOptions ++= Seq("-Ydependent-method-types")
 
-libraryDependencies += "cascading" % "cascading-local" % "2.0.2"
+resolvers ++= Seq(
+    "nicta's avro" at "http://nicta.github.com/scoobi/releases",
+    "cloudera" at "https://repository.cloudera.com/content/repositories/releases",
+    "Sonatype-snapshots" at "http://oss.sonatype.org/content/repositories/snapshots")
 
-libraryDependencies += "cascading" % "cascading-hadoop" % "2.0.2"
+resolvers ++= Seq(
+            // other resolvers here
+            // if you want to use snapshot builds (currently 0.2-SNAPSHOT), use this.
+            "Sonatype Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots/",
+            "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/",
+            "Typesafe Repository" at "http://repo.typesafe.com/typesafe/releases/",
+            "Sonatype tools" at "https://oss.sonatype.org/content/groups/scala-tools/"
+            )
 
-libraryDependencies += "cascading.kryo" % "cascading.kryo" % "0.4.4"
-
-libraryDependencies += "com.twitter" % "meat-locker" % "0.3.0"
-
-libraryDependencies += "com.twitter" % "maple" % "0.2.2"
-
-libraryDependencies += "commons-lang" % "commons-lang" % "2.4"
-
-// scalding (locally build)
-
-libraryDependencies += "com.twitter" % "scalding_2.9.2" % "0.8.2"
-
-libraryDependencies += "org.specs2" % "specs2_2.9.2" % "1.12.1"
-
-// Invocation exception if we try to run the tests in parallel
-parallelExecution in Test := false
+libraryDependencies += "org.apache.avro" % "avro" % "1.6.3"
 
 mainClass in (Compile, run) := Some("main.scala.KMapRed.Main")

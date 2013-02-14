@@ -54,44 +54,39 @@ class KMeans():
         # for i, x in enumerate(X):
         #     X_squared_norms[i] = np.dot(x, x)
         X_squared_norms = np.sum(np.multiply(X, X), axis=1)
-        print X_squared_norms.shape
+        # X_squared_norms = (X ** 2).sum(axis=1)
+
+        # X_squared_norms = X_squared_norms[np.newaxis, :]
+        # print Y.shape
+        # print X_squared_norms.shape
 
         for c in range(1, self.n_clusters):
-            closest_dist_sq = self._distances_to_centers(centers[0:(c)], X,
-                Y_norm_sq=X_squared_norms, sq=True)
+            closest_dist_sq = self._distances_to_centers(centers[0:c], X,
+                X_squared_norms, squared=True)
             closest_dist_sq = closest_dist_sq.min(axis=0)
+            if closest_dist_sq.ndim > 1:
+                closest_dist_sq = np.ravel(closest_dist_sq)
             probs = closest_dist_sq / sum(closest_dist_sq)
             ind = np.random.choice(range(X.shape[0]), p=probs)
             centers[c] = X[ind]
         return centers
 
-    def _distances_to_centers(self, X, Y, Y_norm_sq=None, sq=False):
-        if X.ndim == 1:
-            XX = np.sum(X * X)
-        else:
-            XX = np.sum(np.multiply(X, X), axis=1)
-            # XX = np.sum(np.multiply(X, X), axis=1)[:, np.newaxis]
-            # XX = np.sum(X * X, axis=1)[:, np.newaxis]
-        # distances = np.dot(X, Y.T)
-        # distances = np.dot(X.T, Y)
-        print X.shape
-        print Y.shape
+    def _distances_to_centers(self, X, Y, Y_norm_squared=None, squared=False):
+        XX = np.sum(X * X, axis=1)[:, np.newaxis]
+        YY = Y_norm_squared
+        if YY.ndim > 1:
+            YY = np.rollaxis(YY, axis=1)
         distances = np.dot(X, Y.T)
-        print distances.shape
         distances *= -2
         distances += XX
-        distances += Y_norm_sq
-        return distances if sq else np.sqrt(distances)
+        distances += YY
+
+        return distances if squared else np.sqrt(distances)
 
     def _expectation_step(self, X, centers):
         n_samples = X.shape[0]
         labels = - np.ones(n_samples, dtype=np.int)
-
-        centers_squared_norms = np.zeros(centers.shape[0])
-        X_squared_norms = np.zeros(X.shape[0])
-        for i, center in enumerate(centers):
-            centers_squared_norms[i] = np.dot(center, center)
-
+        centers_squared_norms = np.sum(np.multiply(centers, centers), axis=1)
         X_squared_norms = np.sum(np.multiply(X, X), axis=1)
 
         for sample_ind, sample in enumerate(X):
@@ -99,6 +94,7 @@ class KMeans():
             for center_ind, center in enumerate(centers):
                 dist = 0.0
                 dist += -2 * np.dot(sample, center)
+                print dist.shape
                 dist += centers_squared_norms[center_ind]
                 dist += X_squared_norms[sample_ind]
 
@@ -120,8 +116,8 @@ class KMeans():
 
         for i in empty_clusters:
             n_samples_in_cluster[i] = 1
-        for i, x in enumerate(X):
-            centers[labels[i]] += x
+        for i in range(X.shape[0]):
+            centers[labels[i]] += np.ravel(X[i])
         centers /= n_samples_in_cluster[:, np.newaxis]
         return centers
 

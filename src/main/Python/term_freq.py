@@ -1,6 +1,6 @@
 from scipy.io import mmread
 import numpy as np
-from k_means_take_2 import KMeans
+from k_means_take_2 import KMeans, objective
 from gmm_em_take_2 import GMM_EM
 
 
@@ -81,8 +81,11 @@ def main():
     # g.fit(X.T.todense())
 
     # K = GMM_EM(n_clusters=5, n_iters=100, init='user', user_centers=centers)
-    K = KMeans(n_clusters=3, init='km++')
-    K.fit(X.T.todense())
+    K = KMeans(n_clusters=3, init='lloyds')
+    XX = X.todense().T
+    K.fit(XX)
+
+    print objective(XX, K.labels, K.centers)
 
 
 if __name__ == '__main__':
